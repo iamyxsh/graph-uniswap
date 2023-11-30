@@ -6,7 +6,7 @@ type Token {
   address: String!
   pricePerToken: String!
   balance: String!
-  decimals: String!
+  decimals: Float!
   symbol: String!
   name: String!
   balancePrice: String!

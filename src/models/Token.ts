@@ -9,7 +9,7 @@ export class Token {
   @Field()
   balance: string;
   @Field()
-  decimals: string;
+  decimals: number;
   @Field()
   symbol: string;
   @Field()
@@ -21,7 +21,7 @@ export class Token {
     address: string,
     price: string,
     balance: string,
-    decimals: string,
+    decimals: number,
     symbol: string,
     name: string,
     usdcPrice: string,
@@ -41,5 +41,5 @@ export interface UniswapToken {
   derivedETH: string;
   symbol: string;
   name: string;
-  decimals: string;
+  decimals: number;
 }
