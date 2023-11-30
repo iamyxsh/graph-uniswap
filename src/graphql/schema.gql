@@ -1,0 +1,17 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Token {
+  address: String!
+  pricePerToken: String!
+  balance: String!
+  decimals: String!
+  symbol: String!
+  name: String!
+  balancePrice: String!
+}
+
+type Query {
+  tokens(wallet: String!, first: Float!, skip: Float!): [Token!]!
+}
