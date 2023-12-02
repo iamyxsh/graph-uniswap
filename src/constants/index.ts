@@ -11,3 +11,15 @@ export const USDC_QUERY = `
     }
 }
 `;
+
+export enum NETWORK_TYPE {
+  ETHEREUM = 'ethereum',
+  POLYGON = 'polygon',
+  OPTIMISM = 'optimism',
+}
+
+// Net work - erth poly optimism
+// fecth token ifo from uniswap + curev graph
+// fecth usr balance from alchemy for all theb above nets
+// fecth - 100 tokens from graph (total volume)
+// order based ion combined (uni + curve) volume

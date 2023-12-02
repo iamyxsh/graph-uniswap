@@ -1,12 +1,12 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { Token } from '../models/Token';
-import { TokenBalance } from 'alchemy-sdk';
 import {
   getAlchemyClient,
   getQuery,
   getUniswapTokens,
   getUSDCperETH,
 } from '../utils';
+import { TokenBalance } from 'alchemy-sdk';
 
 const alchemy = getAlchemyClient();
 

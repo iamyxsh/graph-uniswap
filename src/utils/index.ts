@@ -17,7 +17,8 @@ export const getAlchemyClient = (): Alchemy => {
 
 export const getQuery = (first: number, skip: number) => {
   return `{
-    tokens(first: ${first}, skip: ${skip}) {
+    tokens(first: ${first}, skip: ${skip}, where: {
+    id_in: ["0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "0xaec2e87e0a235266d9c5adc9deb4b2e29b54d009"]}) {
       id
       symbol
       name
