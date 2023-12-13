@@ -1,44 +1,63 @@
-import { Alchemy, Network } from 'alchemy-sdk';
-import {
-  ALCHEMY_API_KEY,
-  UNISWAP_GRAPH_ENDPOINT,
-  USDC_QUERY,
-} from '../constants';
-import axios from 'axios';
-import { UniswapToken } from '../models/Token';
+import { Token, UniswapToken } from '../models/Token';
+import { TokenBalance } from '../types';
+import { ETHConstants, NETWORK_TYPE } from '../constants';
 
-export const getAlchemyClient = (): Alchemy => {
-  const config = {
-    apiKey: ALCHEMY_API_KEY,
-    network: Network.ETH_MAINNET,
-  };
-  return new Alchemy(config);
-};
+export const getTokens = (
+  uniswapTokens: UniswapToken[],
+  usdcPerEth: number,
+  tokenAddressesPrice: string[],
+  tokenBalances: TokenBalance[],
+): [Token] => {
+  return uniswapTokens.map((uniToken) => {
+    const token = new Token(
+      uniToken.id,
+      (usdcPerEth! * parseFloat(uniToken.derivedETH)).toString(),
+      BigInt(0).toString(),
+      uniToken.decimals,
+      uniToken.symbol,
+      uniToken.name,
+      BigInt(0).toString(),
+    );
 
-export const getQuery = (first: number, skip: number) => {
-  return `{
-    tokens(first: ${first}, skip: ${skip}, where: {
-    id_in: ["0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "0xaec2e87e0a235266d9c5adc9deb4b2e29b54d009"]}) {
-      id
-      symbol
-      name
-      decimals
-      derivedETH
+    if (tokenAddressesPrice.includes(token.address)) {
+      const tokenBalance = tokenBalances.filter(
+        (tokenBalance) => tokenBalance.contractAddress === token.address,
+      )[0] as TokenBalance;
+
+      token.balancePrice = calculateValueInUSDC(
+        BigInt(tokenBalance.tokenBalance).toString(),
+        token.pricePerToken,
+        token.decimals,
+      ).toString();
+
+      token.balance = BigInt(tokenBalance.tokenBalance).toString();
     }
-  }`;
+
+    return token;
+  }) as [Token];
 };
 
-export const getUSDCperETH = async (): Promise<number> => {
-  return axios
-    .post(UNISWAP_GRAPH_ENDPOINT, { query: USDC_QUERY })
-    .then((res) => res.data.data.token.derivedETH)
-    .then((res) => 1 / res);
+export const calculateValueInUSDC = (
+  balance: string,
+  pricePerToken: string,
+  decimalPlaces: number,
+) => {
+  const bal = parseInt(balance) / 10 ** decimalPlaces;
+  return parseFloat(pricePerToken) * bal;
 };
 
-export const getUniswapTokens = async (
-  query: string,
-): Promise<[UniswapToken]> => {
-  return axios
-    .post(UNISWAP_GRAPH_ENDPOINT, { query })
-    .then((res) => res.data.data.tokens as [UniswapToken]);
+export const getNetworkInfo = (
+  network: NETWORK_TYPE,
+): {
+  USDC_CONTRACT_ADDRESS: string;
+  UNISWAP_GRAPH_ENDPOINT: string;
+} => {
+  switch (network) {
+    case NETWORK_TYPE.POLYGON:
+      break;
+    case NETWORK_TYPE.OPTIMISM:
+      break;
+    case NETWORK_TYPE.ETHEREUM:
+      return ETHConstants;
+  }
 };

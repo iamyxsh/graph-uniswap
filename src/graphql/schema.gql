@@ -13,5 +13,5 @@ type Token {
 }
 
 type Query {
-  tokens(wallet: String!, first: Float!, skip: Float!): [Token!]!
+  tokens(wallet: String!, network: String!, first: Float!, skip: Float!): [Token!]!
 }

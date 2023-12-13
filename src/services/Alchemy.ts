@@ -23,6 +23,10 @@ export class AlchemyService {
     );
   }
 
+  getTokenAddresses(tokens: TokenBalance[]): string[] {
+    return tokens.map((item) => item.contractAddress);
+  }
+
   private getAlchemyNetwork(network: NETWORK_TYPE): Network {
     switch (network) {
       case NETWORK_TYPE.ETHEREUM:

@@ -1,72 +1,44 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { Token } from '../models/Token';
-import {
-  getAlchemyClient,
-  getQuery,
-  getUniswapTokens,
-  getUSDCperETH,
-} from '../utils';
-import { TokenBalance } from 'alchemy-sdk';
-
-const alchemy = getAlchemyClient();
+import { getNetworkInfo, getTokens } from '../utils';
+import { NETWORK_TYPE } from '../constants';
+import { AlchemyService, Uniswap } from '../services';
+import { TokenBalance } from '../types';
 
 @Resolver('Query')
 export class AppResolver {
   @Query(() => [Token])
   async tokens(
     @Args('wallet') wallet: string,
+    @Args('network') network: NETWORK_TYPE,
     @Args('first') first: number,
     @Args('skip') skip: number,
   ): Promise<[Token]> {
     try {
-      const balances = await alchemy.core.getTokenBalances(wallet);
-      const tokenAddressesPrice = balances.tokenBalances.map(
-        (item) => item.contractAddress,
+      const alchemy = new AlchemyService(network);
+      const { USDC_CONTRACT_ADDRESS, UNISWAP_GRAPH_ENDPOINT } =
+        getNetworkInfo(network);
+      const uniswap = new Uniswap(
+        network,
+        USDC_CONTRACT_ADDRESS,
+        UNISWAP_GRAPH_ENDPOINT,
       );
 
-      const usdcPerEth = await getUSDCperETH()!;
-      const uniTokens = await getUniswapTokens(getQuery(first, skip));
+      const tokenBalances: TokenBalance[] =
+        await alchemy.getTokenBalances(wallet);
+      const tokenAddressesPrice = alchemy.getTokenAddresses(tokenBalances);
 
-      const tokens = uniTokens.map((item) => {
-        const token = new Token(
-          item.id,
-          (usdcPerEth! * parseFloat(item.derivedETH)).toString(),
-          BigInt(0).toString(),
-          item.decimals,
-          item.symbol,
-          item.name,
-          BigInt(0).toString(),
-        );
+      const usdcPerEth = (await uniswap.getUSDPerETH()!) as number;
+      const uniTokens = await uniswap.getTokensInfo(first / 2, skip / 2);
 
-        if (tokenAddressesPrice.includes(token.address)) {
-          const tokenBalance = balances.tokenBalances.filter(
-            (item) => item.contractAddress === token.address,
-          )[0] as TokenBalance;
-
-          token.balancePrice = calculateValueInUSDC(
-            BigInt(tokenBalance.tokenBalance).toString(),
-            token.pricePerToken,
-            token.decimals,
-          ).toString();
-
-          token.balance = BigInt(tokenBalance.tokenBalance).toString();
-        }
-
-        return token;
-      });
-
-      return tokens as [Token];
+      return getTokens(
+        uniTokens,
+        usdcPerEth,
+        tokenAddressesPrice,
+        tokenBalances,
+      );
     } catch (err) {
       console.log(err);
     }
   }
-}
-
-function calculateValueInUSDC(
-  balance: string,
-  pricePerToken: string,
-  decimalPlaces: number,
-) {
-  const bal = parseInt(balance) / 10 ** decimalPlaces;
-  return parseFloat(pricePerToken) * bal;
 }
