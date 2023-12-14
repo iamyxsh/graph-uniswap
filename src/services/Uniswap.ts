@@ -1,6 +1,8 @@
-import { NETWORK_TYPE } from '../constants';
+import { EXCHANGE_TYPE, NETWORK_TYPE } from '../constants';
 import axios from 'axios';
-import { UniswapToken } from '../models/Token';
+import { Token, UniswapToken } from '../models/Token';
+import { TokenBalance } from '../types';
+import { calculateValueInUSDC } from '../utils';
 
 export class Uniswap {
   private network: NETWORK_TYPE;
@@ -30,6 +32,42 @@ export class Uniswap {
     return axios
       .post(this.GRAPHQL_ENDPOINT, { query: query })
       .then((res) => res.data.data.tokens);
+  }
+
+  getTokens(
+    uniswapTokens: UniswapToken[],
+    usdcPerEth: number,
+    tokenAddressesPrice: string[],
+    tokenBalances: TokenBalance[],
+  ): [Token] {
+    return uniswapTokens.map((uniToken) => {
+      const token = new Token(
+        uniToken.id,
+        (usdcPerEth! * parseFloat(uniToken.derivedETH)).toString(),
+        BigInt(0).toString(),
+        uniToken.decimals,
+        uniToken.symbol,
+        uniToken.name,
+        BigInt(0).toString(),
+        EXCHANGE_TYPE.UNISWAP,
+      );
+
+      if (tokenAddressesPrice.includes(token.address)) {
+        const tokenBalance = tokenBalances.filter(
+          (tokenBalance) => tokenBalance.contractAddress === token.address,
+        )[0] as TokenBalance;
+
+        token.balancePrice = calculateValueInUSDC(
+          BigInt(tokenBalance.tokenBalance).toString(),
+          token.pricePerToken,
+          token.decimals,
+        ).toString();
+
+        token.balance = BigInt(tokenBalance.tokenBalance).toString();
+      }
+
+      return token;
+    }) as [Token];
   }
 
   private getTokenPerEthQuery(address: string): string {

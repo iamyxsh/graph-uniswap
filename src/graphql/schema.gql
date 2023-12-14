@@ -10,6 +10,7 @@ type Token {
   symbol: String!
   name: String!
   balancePrice: String!
+  exchange: String!
 }
 
 type Query {

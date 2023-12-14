@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { EXCHANGE_TYPE } from '../constants';
 
 @ObjectType()
 export class Token {
@@ -16,6 +17,8 @@ export class Token {
   name: string;
   @Field()
   balancePrice: string;
+  @Field()
+  exchange: EXCHANGE_TYPE;
 
   constructor(
     address: string,
@@ -25,6 +28,7 @@ export class Token {
     symbol: string,
     name: string,
     usdcPrice: string,
+    exchange: EXCHANGE_TYPE,
   ) {
     this.pricePerToken = price;
     this.address = address;
@@ -33,12 +37,21 @@ export class Token {
     this.symbol = symbol;
     this.name = name;
     this.balancePrice = usdcPrice;
+    this.exchange = exchange;
   }
 }
 
 export interface UniswapToken {
   id: string;
   derivedETH: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+}
+
+export interface CurveToken {
+  id: string;
+  lastPriceUSD: string;
   symbol: string;
   name: string;
   decimals: number;
